@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>One Piece Gacha Game with Enemies</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            padding: 20px;
+        }
+        h1, h2 {
+            text-align: center;
+        }
+        .character-list, .inventory, .enemy-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+        }
+        .character, .inventory-item, .enemy {
+            background-color: #fff;
+            border: 1px solid #ccc;
+            padding: 20px;
+            width: 200px;
+            text-align: center;
+            border-radius: 10px;
+        }
+        .character img, .enemy img {
+            max-width: 100%;
+            border-radius: 10px;
+        }
+        .button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .button:disabled {
+            background-color: #ccc;
+        }
+        .money {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>One Piece Gacha Game</h1>
+    <h2>Summon Your Characters</h2>
+
+    <div class="money">
+        <p>Money: <span id="moneyAmount">0</span> coins</p>
+        <p><button class="button" id="freeSummonButton" onclick="summonCharacter(null, true)">Free Summon</button></p>
+    </div>
+
+    <div class="character-list">
+        <!-- Character Buttons for Summoning -->
+        <div class="character" id="luffyPre" data-rarity="Rare" data-name="Luffy (Pre-Timeskip)" data-ability="Gomu Gomu no Pistol, Gear Second">
+            <h3>Luffy (Pre-Timeskip)</h3>
+            <img src="https://www.example.com/luffy-pre.jpg" alt="Luffy Pre-Timeskip">
+            <button class="button" onclick="summonCharacter(this)">Summon</button>
+        </div>
+        <div class="character" id="luffyPost" data-rarity="Epic" data-name="Luffy (Post-Timeskip)" data-ability="Gear 2, Gear 3, Conqueror's Haki">
+            <h3>Luffy (Post-Timeskip)</h3>
+            <img src="https://www.example.com/luffy-post.jpg" alt="Luffy Post-Timeskip">
+            <button class="button" onclick="summonCharacter(this)">Summon</button>
+        </div>
+        <div class="character" id="zoroPre" data-rarity="Uncommon" data-name="Zoro (Pre-Timeskip)" data-ability="Santoryu, Three-Sword Style">
+            <h3>Zoro (Pre-Timeskip)</h3>
+            <img src="https://www.example.com/zoro-pre.jpg" alt="Zoro Pre-Timeskip">
+            <button class="button" onclick="summonCharacter(this)">Summon</button>
+        </div>
+        <div class="character" id="zoroPost" data-rarity="Epic" data-name="Zoro (Post-Timeskip)" data-ability="Santoryu (Enhanced), Asura">
+            <h3>Zoro (Post-Timeskip)</h3>
+            <img src="https://www.example.com/zoro-post.jpg" alt="Zoro Post-Timeskip">
+            <button class="button" onclick="summonCharacter(this)">Summon</button>
+        </div>
+        <div class="character" id="whitebeard" data-rarity="Legendary" data-name="Whitebeard" data-ability="Gura Gura no Mi, Tremor Generation">
+            <h3>Whitebeard</h3>
+            <img src="https://www.example.com/whitebeard.jpg" alt="Whitebeard">
+            <button class="button" onclick="summonCharacter(this)">Summon</button>
+        </div>
+        <div class="character" id="brookPost" data-rarity="Rare" data-name="Brook (Post-Timeskip)" data-ability="Yomi Yomi no Mi, Soul King, Music Attack (Enhanced)">
+            <h3>Brook (Post-Timeskip)</h3>
+            <img src="https://www.example.com/brook-post.jpg" alt="Brook Post-Timeskip">
+            <button class="button" onclick="summonCharacter(this)">Summon</button>
+        </div>
+        <div class="character" id="kidPost" data-rarity="Mythical" data-name="Kid (Post-Timeskip)" data-ability="Jiki Jiki no Mi (Enhanced), Magnet Power (Improved)">
+            <h3>Kid (Post-Timeskip)</h3>
+            <img src="https://www.example.com/kid-post.jpg" alt="Kid Post-Timeskip">
+            <button class="button" onclick="summonCharacter(this)">Summon</button>
+        </div>
+    </div>
+
+    <h2>Defeat Enemies</h2>
+    <div class="enemy-list" id="enemyList">
+        <!-- Enemies for the player to fight -->
+    </div>
+
+    <h2>Your Inventory</h2>
+    <div class="inventory" id="inventory">
+        <!-- Inventory will be updated dynamically -->
+    </div>
+
+    <script>
+        let inventory = [];
+        let money = 0;
+        let freeSummonUsed = false;
+        let currentLevel = 1;
+
+        // Set of predefined enemies with their levels
+        const enemies = [
+            { name: 'Arlong', level: 1, image: 'https://www.example.com/arlong.jpg' },
+            { name: 'Crocodile', level: 2, image: 'https://www.example.com/crocodile.jpg' },
+            { name: 'Doflamingo', level: 3, image: 'https://www.example.com/doflamingo.jpg' },
+            { name: 'Kaido', level: 5, image: 'https://www.example.com/kaido.jpg' },
+            { name: 'Big Mom', level: 5, image: 'https://www.example.com/bigmom.jpg' },
+        ];
+
+        // Load saved progress from localStorage
+        window.onload = function() {
+            loadGame();
+            loadEnemies();
+        };
+
+        // Function to generate a new enemy based on the current level
+        function loadEnemies() {
+            const enemyList = document.getElementById('enemyList');
+            enemyList.innerHTML = '';
+
+            // Filter enemies based on the player's current level
+            const availableEnemies = enemies.filter(enemy => enemy.level <= currentLevel);
+
+            availableEnemies.forEach(enemy => {
+                const enemyDiv = document.createElement('div');
+                enemyDiv.classList.add('enemy');
+                enemyDiv.innerHTML = `
+                    <h3>${enemy.name}</h3>
+                    <img src="${enemy.image}" alt="${enemy.name}">
+                    <button class="button" onclick="defeatEnemy(${enemy.level}, '${enemy.name}')">Defeat ${enemy.name}</button>
+                `;
+                enemyList.appendChild(enemyDiv);
+            });
+        }
+
+        // Function to defeat an enemy and earn coins
+        function defeatEnemy(level, enemyName) {
+            // Reward coins based on the level of the defeated enemy
+            const coinsEarned = level * 100;
+            money += coinsEarned;
+
+            // Show message
+            alert(`You defeated ${enemyName} and earned ${coinsEarned} coins!`);
+
+            // Level up (this can be expanded)
+            currentLevel++;
+            loadEnemies();
+            updateMoney();
+            saveGame();
+        }
+
+        // Function to summon a character with probabilities
+        function summonCharacter(button, freeSummon = false) {
+            if (freeSummon && freeSummonUsed) {
+                alert('You have already used your free summon!');
+                return;
+            }
+
+            if (freeSummon) {
+                freeSummonUsed = true;
+            } else if (money < 100) {
+                alert('You need at least 100 coins to summon!');
+                return;
+            }
+
+            const characterName = button ? button.parentElement.getAttribute('data-name') : "Free Summon";
+            const characterAbility = button ? button.parentElement.getAttribute('data-ability') : "Random Ability";
+            const characterRarity = button ? button.parentElement.getAttribute('data-rarity') : "Common";
+
+            // Deduct money if it's a paid summon
+            if (!freeSummon) {
+                money -= 100;
+            }
+
+            // Add the character to the inventory
+            const character = {
+                name: characterName,
+                ability: characterAbility,
+                rarity: characterRarity,
+            };
+            inventory.push(character);
+            updateInventory();
+            saveGame();
+
+            // Update money
+            updateMoney();
+        }
+
+        // Update the inventory display
+        function updateInventory() {
+            const inventoryDiv = document.getElementById('inventory');
+            inventoryDiv.innerHTML = '';
+
+            inventory.forEach(character => {
+                const inventoryItem = document.createElement('div');
+                inventoryItem.classList.add('inventory-item');
+                inventoryItem.innerHTML = `
+                    <h3>${character.name}</h3>
+                    <p><strong>Ability:</strong> ${character.ability}</p>
+                    <p><strong>Rarity:</strong> ${character.rarity}</p>
+                `;
+                inventoryDiv.appendChild(inventoryItem);
+            });
+        }
+
+        // Update the money display
+        function updateMoney() {
+            document.getElementById('moneyAmount').innerText = money;
+        }
+
+        // Function to save game progress
+        function saveGame() {
+            localStorage.setItem('inventory', JSON.stringify(inventory));
+            localStorage.setItem('money', money);
+            localStorage.setItem('freeSummonUsed', freeSummonUsed);
+            localStorage.setItem('currentLevel', currentLevel);
+        }
+
+        // Function to load game progress
+        function loadGame() {
+            const savedInventory = localStorage.getItem('inventory');
+            const savedMoney = localStorage.getItem('money');
+            const savedFreeSummonUsed = localStorage.getItem('freeSummonUsed');
+            const savedCurrentLevel = localStorage.getItem('currentLevel');
+
+            if (savedInventory) {
+                inventory = JSON.parse(savedInventory);
+            }
+            if (savedMoney) {
+                money = parseInt(savedMoney);
+            }
+            if (savedFreeSummonUsed) {
+                freeSummonUsed = savedFreeSummonUsed === 'true';
+            }
+            if (savedCurrentLevel) {
+                currentLevel = parseInt(savedCurrentLevel);
+            }
+
+            updateMoney();
+            updateInventory();
+            loadEnemies();
+        }
+    </script>
+</body>
+</html>
