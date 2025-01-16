@@ -1,1 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>One Piece Gacha Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        header {
+            background: #333;
+            color: #fff;
+            padding: 10px;
+            text-align: center;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .button {
+            background: #007bff;
+            color: #fff;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .button:hover {
+            background: #0056b3;
+        }
+        .inventory {
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .character-card {
+            background: #eee;
+            padding: 10px;
+            margin: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            text-align: center;
+            flex: 1 1 calc(33.333% - 20px);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>One Piece Gacha Game</h1>
+    </header>
+    <div class="container">
+        <h2>Summon Characters</h2>
+        <button class="button" id="summonButton">Summon</button>
+        <p id="summonResult">Press the button to summon a character!</p>
 
+        <h2>Your Inventory</h2>
+        <div id="inventory" class="inventory"></div>
+
+        <h2>Coins: <span id="coins">0</span></h2>
+
+        <h2>Boss Battle</h2>
+        <button class="button" id="fightBoss">Fight Boss</button>
+        <p id="bossResult">Defeat bosses to earn rewards!</p>
+    </div>
+
+    <script>
+        // Game Data
+        const rarities = ["Common", "Uncommon", "Rare", "Epic", "Mythical", "Legendary", "Exotic"];
+        const characters = [
+            { name: "Luffy", rarity: "Mythical" },
+            { name: "Zoro", rarity: "Epic" },
+            { name: "Sanji", rarity: "Rare" },
+            { name: "Nami", rarity: "Uncommon" },
+            { name: "Robin", rarity: "Rare" },
+            { name: "Shanks", rarity: "Legendary" },
+            { name: "Whitebeard", rarity: "Exotic" },
+            { name: "Brook", rarity: "Rare" },
+            { name: "Kid", rarity: "Epic" },
+            { name: "Ace", rarity: "Mythical" }
+        ];
+
+        const inventory = [];
+        let coins = 0;
+
+        // Summon Function
+        document.getElementById("summonButton").addEventListener("click", () => {
+            if (coins < 10) {
+                alert("Not enough coins! Defeat bosses to earn more coins.");
+                return;
+            }
+
+            coins -= 10;
+            updateCoins();
+
+            // Gacha logic
+            const rarityRoll = Math.random();
+            let rarity;
+            if (rarityRoll < 0.5) rarity = "Common";
+            else if (rarityRoll < 0.75) rarity = "Uncommon";
+            else if (rarityRoll < 0.9) rarity = "Rare";
+            else if (rarityRoll < 0.97) rarity = "Epic";
+            else if (rarityRoll < 0.995) rarity = "Mythical";
+            else rarity = "Exotic";
+
+            const pool = characters.filter(c => c.rarity === rarity);
+            const summoned = pool[Math.floor(Math.random() * pool.length)];
+
+            if (summoned) {
+                inventory.push(summoned);
+                document.getElementById("summonResult").innerText = `You summoned: ${summoned.name} (${summoned.rarity})!`;
+                updateInventory();
+            } else {
+                document.getElementById("summonResult").innerText = "No character found. Try again!";
+            }
+        });
+
+        // Boss Battle
+        document.getElementById("fightBoss").addEventListener("click", () => {
+            const bossLevel = Math.floor(Math.random() * 10) + 1;
+            const bossReward = bossLevel * 5;
+            coins += bossReward;
+            document.getElementById("bossResult").innerText = `You defeated a level ${bossLevel} boss and earned ${bossReward} coins!`;
+            updateCoins();
+        });
+
+        // Update Coins
+        function updateCoins() {
+            document.getElementById("coins").innerText = coins;
+        }
+
+        // Update Inventory
+        function updateInventory() {
+            const inventoryDiv = document.getElementById("inventory");
+            inventoryDiv.innerHTML = "";
+            inventory.forEach(char => {
+                const charCard = document.createElement("div");
+                charCard.className = "character-card";
+                charCard.innerText = `${char.name} (${char.rarity})`;
+                inventoryDiv.appendChild(charCard);
+            });
+        }
+
+        // Initialize Game
+        updateCoins();
+        updateInventory();
+    </script>
+</body>
+</html>
